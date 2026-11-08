@@ -1,0 +1,90 @@
+name: macOS build
+
+run-name: "macos ${{ inputs.version }} (${{ inputs.gitlab_sha }})"
+
+on:
+  workflow_dispatch:
+    inputs:
+      gitlab_sha:
+        description: GitLab commit SHA to build
+        required: true
+      version:
+        description: Release version without the v prefix
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 90
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: Fetch GitLab source
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_SHA: ${{ inputs.gitlab_sha }}
+        run: |
+          git config --global url."https://oauth2:${GITLAB_TOKEN}@jonasled.dev/".insteadOf "https://jonasled.dev/"
+          git init sfp-tool
+          cd sfp-tool
+          git remote add origin https://jonasled.dev/jonasled/sfp-tool.git
+          git fetch --depth 1 origin "$GITLAB_SHA"
+          git checkout --detach FETCH_HEAD
+          git submodule update --init --recursive --depth 1 external/TransceiverTool
+
+      - name: Set version
+        working-directory: sfp-tool/software/App/SFP-Tool
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tauri.conf.json.tmp
+          mv tauri.conf.json.tmp src-tauri/tauri.conf.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install tools
+        run: |
+          npm install -g pnpm@12.14.0
+          brew install cmake conan emscripten jq
+
+      - name: Build wasm
+        working-directory: sfp-tool/software/App/SFP-Tool
+        run: bash scripts/build-transceiver-wasm.sh
+
+      - name: Install dependencies
+        working-directory: sfp-tool/software/App/SFP-Tool
+        run: pnpm install --frozen-lockfile
+
+      - name: Build app (universal, signed, notarized)
+        working-directory: sfp-tool/software/App/SFP-Tool
+        run: pnpm tauri build --target universal-apple-darwin
+
+      - name: Collect artifacts
+        run: |
+          OUT=out
+          mkdir -p "$OUT"
+          BUNDLE=sfp-tool/software/App/SFP-Tool/src-tauri/target/universal-apple-darwin/release/bundle
+          cp "$BUNDLE"/dmg/*.dmg "$OUT"/
+          cp "$BUNDLE"/macos/sfp-tool.app.tar.gz "$BUNDLE"/macos/sfp-tool.app.tar.gz.sig "$OUT"/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
+          path: out/
+          retention-days: 7
