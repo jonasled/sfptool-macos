@@ -55,7 +55,17 @@ jobs:
       - name: Install tools
         run: |
           npm install -g pnpm@12.14.0
-          brew install cmake conan emscripten llvm binaryen jq
+          brew install cmake conan jq
+
+      - name: Install Emscripten (emsdk)
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
+          cd "$HOME/emsdk"
+          ./emsdk install latest
+          ./emsdk activate latest
+          echo "$HOME/emsdk" >> "$GITHUB_PATH"
+          echo "$HOME/emsdk/upstream/emscripten" >> "$GITHUB_PATH"
+          echo "EM_CONFIG=$HOME/emsdk/.emscripten" >> "$GITHUB_ENV"
 
       - name: Build wasm
         working-directory: sfp-tool/software/App/SFP-Tool
