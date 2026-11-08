@@ -44,7 +44,7 @@ jobs:
           jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tauri.conf.json.tmp
           mv tauri.conf.json.tmp src-tauri/tauri.conf.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
 
@@ -55,7 +55,7 @@ jobs:
       - name: Install tools
         run: |
           npm install -g pnpm@12.14.0
-          brew install cmake conan emscripten jq
+          brew install cmake conan emscripten llvm binaryen jq
 
       - name: Build wasm
         working-directory: sfp-tool/software/App/SFP-Tool
