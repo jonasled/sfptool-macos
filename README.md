@@ -4,12 +4,11 @@ Builds the macOS universal `.app` and `.dmg` for `sfp-tool`. Triggered from the 
 
 ## Setup
 
-Workflow: `.github/workflows/build-macos.yml` (`workflow_dispatch`, inputs `gitlab_sha`, `version`). Must exist on the default branch (`main`).
+Workflow: `.github/workflows/build-macos.yml` (`workflow_dispatch`, inputs `gitlab_sha`, `version`). Must exist on the default branch (`master`).
 
 Repository secrets:
 
 - `GITLAB_TOKEN`: GitLab project access token, `read_repository` scope, on `jonasled/sfp-tool`.
 - `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: updater signing key (same as GitLab).
-- `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`: Developer ID signing and notarization.
 
 GitLab side needs CI variables `GITHUB_TOKEN` (fine-grained PAT, Actions read+write on this repo) and `GITHUB_REPO` (`owner/sfptool-macos`).
