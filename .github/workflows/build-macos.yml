@@ -1,6 +1,6 @@
 name: macOS build
 
-run-name: "macos ${{ inputs.version }} (${{ inputs.gitlab_sha }})"
+run-name: "macos ${{ inputs.version }} (${{ inputs.gitlab_sha }}) gitlab-job ${{ inputs.gitlab_job_id }}"
 
 on:
   workflow_dispatch:
@@ -10,6 +10,9 @@ on:
         required: true
       version:
         description: Release version without the v prefix
+        required: true
+      gitlab_job_id:
+        description: GitLab job ID that requested the build (makes the run name unique per request)
         required: true
 
 permissions:
