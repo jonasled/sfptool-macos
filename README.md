@@ -8,7 +8,6 @@ Workflow: `.github/workflows/build-macos.yml` (`workflow_dispatch`, inputs `forg
 
 Repository secrets:
 
-- `FORGEJO_TOKEN`: Forgejo access token, read access to the repository, on `jonasled/sfp-tool`.
 - `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: updater signing key (same as Forgejo).
 
 Forgejo side needs secrets `GH_TOKEN` (fine-grained PAT, Actions read+write on this repo) and `GH_REPO` (`owner/sfptool-macos`).
