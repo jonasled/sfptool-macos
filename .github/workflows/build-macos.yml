@@ -1,18 +1,18 @@
 name: macOS build
 
-run-name: "macos ${{ inputs.version }} (${{ inputs.gitlab_sha }}) gitlab-job ${{ inputs.gitlab_job_id }}"
+run-name: "macos ${{ inputs.version }} (${{ inputs.forgejo_sha }}) forgejo-job ${{ inputs.forgejo_job_id }}"
 
 on:
   workflow_dispatch:
     inputs:
-      gitlab_sha:
-        description: GitLab commit SHA to build
+      forgejo_sha:
+        description: Forgejo commit SHA to build
         required: true
       version:
         description: Release version without the v prefix
         required: true
-      gitlab_job_id:
-        description: GitLab job ID that requested the build (makes the run name unique per request)
+      forgejo_job_id:
+        description: Forgejo run ID that requested the build (makes the run name unique per request)
         required: true
 
 permissions:
@@ -26,16 +26,16 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
     steps:
-      - name: Fetch GitLab source
+      - name: Fetch Forgejo source
         env:
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          GITLAB_SHA: ${{ inputs.gitlab_sha }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          FORGEJO_SHA: ${{ inputs.forgejo_sha }}
         run: |
-          git config --global url."https://oauth2:${GITLAB_TOKEN}@jonasled.dev/".insteadOf "https://jonasled.dev/"
+          git config --global url."https://oauth2:${FORGEJO_TOKEN}@jonasled.dev/".insteadOf "https://jonasled.dev/"
           git init sfp-tool
           cd sfp-tool
           git remote add origin https://jonasled.dev/jonasled/sfp-tool.git
-          git fetch --depth 1 origin "$GITLAB_SHA"
+          git fetch --depth 1 origin "$FORGEJO_SHA"
           git checkout --detach FETCH_HEAD
           git submodule update --init --recursive --depth 1 external/TransceiverTool
 
